@@ -1,28 +1,33 @@
-# docker-compose.yml
 version: "3.8"
 
+# Definir volúmenes para que los datos no se pierdan
 volumes:
   prometheus_data: {}
+  grafana_data: {} # Añadimos un volumen para los datos de Grafana
 
 services:
+  # --- Servicio de Prometheus ---
   prometheus:
     build:
       context: .
       dockerfile: prometheus.dockerfile
     container_name: prometheus_service
-    ports:
-      - "9090:9090"
+    # No es necesario exponer el puerto a internet, Grafana lo accederá internamente
+    # ports:
+    #   - "9090:9090"
     volumes:
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     restart: unless-stopped
 
+  # --- Servicio de cAdvisor ---
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
     container_name: cadvisor_service
-    ports:
-      - "8081:8080"
+    # Tampoco es necesario exponer este puerto
+    # ports:
+    #   - "8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -30,4 +35,14 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     privileged: true
+    restart: unless-stopped
+
+  # --- Servicio de Grafana ---
+  grafana:
+    image: grafana/grafana-oss:latest # Usamos la imagen oficial de código abierto
+    container_name: grafana_service
+    ports:
+      - "3000:3000" # Exponemos Grafana al exterior para que puedas acceder a la web
+    volumes:
+      - grafana_data:/var/lib/grafana # Guardamos los dashboards y configuraciones
     restart: unless-stopped
