@@ -11,8 +11,9 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      # Esta línea ahora funcionará porque el archivo existe en el repositorio
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - type: bind
+        source: ./prometheus.yml
+        target: /etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
