@@ -41,6 +41,9 @@ services:
   grafana:
     image: grafana/grafana-oss:latest # Usamos la imagen oficial de código abierto
     container_name: grafana_service
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=c99GCRpcHwQyUeFCXoiUxCDQA8Fs9ffv
+      - GF_SECURITY_ADMIN_USER=grafana
     ports:
       - "3000:3000" # Exponemos Grafana al exterior para que puedas acceder a la web
     volumes:
