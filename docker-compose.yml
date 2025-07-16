@@ -13,8 +13,8 @@ services:
       dockerfile: prometheus.dockerfile
     container_name: prometheus_service
     # No es necesario exponer el puerto a internet, Grafana lo accederá internamente
-    # ports:
-    #   - "9090:9090"
+    ports:
+      - "9090:9090"
     volumes:
       - prometheus_data:/prometheus
     command:
