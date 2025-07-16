@@ -1,33 +1,31 @@
 version: "3.8"
 
-# Definir volúmenes para que los datos no se pierdan
+# Definimos una red explícita para que todos los servicios hablen el mismo idioma
+networks:
+  monitoring-net:
+    driver: bridge
+
 volumes:
   prometheus_data: {}
-  grafana_data: {} # Añadimos un volumen para los datos de Grafana
+  grafana_data: {}
 
 services:
-  # --- Servicio de Prometheus ---
   prometheus:
     build:
       context: .
       dockerfile: prometheus.dockerfile
     container_name: prometheus_service
-    # No es necesario exponer el puerto a internet, Grafana lo accederá internamente
-    ports:
-      - "9090:9090"
     volumes:
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     restart: unless-stopped
+    networks:
+      - monitoring-net
 
-  # --- Servicio de cAdvisor ---
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor_service
-    # Tampoco es necesario exponer este puerto
-    # ports:
-    #   - "8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -36,16 +34,33 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     privileged: true
     restart: unless-stopped
+    networks:
+      - monitoring-net
 
-  # --- Servicio de Grafana ---
   grafana:
-    image: grafana/grafana-oss:latest # Usamos la imagen oficial de código abierto
+    image: grafana/grafana-oss:latest
     container_name: grafana_service
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=c99GCRpcHwQyUeFCXoiUxCDQA8Fs9ffv
-      - GF_SECURITY_ADMIN_USER=grafana
     ports:
-      - "3000:3000" # Exponemos Grafana al exterior para que puedas acceder a la web
+      - "3000:3000"
     volumes:
-      - grafana_data:/var/lib/grafana # Guardamos los dashboards y configuraciones
+      - grafana_data:/var/lib/grafana
     restart: unless-stopped
+    networks:
+      - monitoring-net
+
+  # --- AÑADIMOS EL NUEVO SERVICIO NODE-EXPORTER ---
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter_service
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/host"
+    pid: "host" # Esencial para que pueda leer los procesos del host
+    restart: unless-stopped
+    networks: # Lo conectamos a la misma red
+      - monitoring-net

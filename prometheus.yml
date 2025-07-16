@@ -1,4 +1,3 @@
-# prometheus.yml
 global:
   scrape_interval: 15s
 
@@ -10,3 +9,9 @@ scrape_configs:
   - job_name: "cadvisor"
     static_configs:
       - targets: ["cadvisor:8080"]
+
+  # --- AÑADIMOS EL NUEVO JOB PARA NODE-EXPORTER ---
+  - job_name: "node-exporter"
+    static_configs:
+      # El puerto por defecto de node-exporter es el 9100
+      - targets: ["node-exporter:9100"]
