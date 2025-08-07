@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: prometheus.dockerfile
     ports:
-      - "9090:9090"
+      - "19090:9090"
     container_name: prometheus_service
     volumes:
       - prometheus_data:/prometheus
@@ -43,7 +43,7 @@ services:
     image: grafana/grafana-oss:latest
     container_name: grafana_service
     ports:
-      - "3000:3000"
+      - "13000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     restart: unless-stopped
